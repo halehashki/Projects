@@ -1,0 +1,164 @@
+function [N]=SIR_Dynamic_RandomNetwork()    %% N= new...    %%n: number of nodes   t:number of time steps
+
+
+A=dlmread('/Users/halehashki/Haleh/Thesis/Paper/codes/data/erdos_renyi_Network/Networks2/Networks/Network50.txt');
+B=make_reduced_node_matrix()
+
+W=ones(n,1);
+W=.005 * W; 
+
+
+
+PA=zeros(size(A));   %%% making new matrix which get lots of memory , may just replace in A.I did not that to be able to change the W or A matrix later
+for i=1:size(W,1)
+    PA(i,:)=W(i,1)*A(i,:);
+end
+
+PB=zeros(size(B));   %%% making new matrix which get lots of memory , may just replace in A.I did not that to be able to change the W or A matrix later
+for i=1:size(W,1)
+    PB(i,:)=W(i,1)*B(i,:);
+end
+
+t=1000;
+
+
+
+TH=.9;
+TH_recovered=0.9;
+
+
+L=zeros(n,1);
+L(:,1)= .05;
+
+
+
+%%% random node whicih is infected first
+r=round(1 + (n-1).*rand(1,1));
+
+
+XI=zeros(n,1);
+XR=ones(n,1);
+XR=0.000001*XR;
+
+FIR=zeros(n,2);  %%% Infected, recoverd
+
+
+
+
+
+N=zeros(t,2);
+
+counter=1;
+XI(r)=1;
+FIR(r,1)=1;
+DXI=zeros(n,1);
+
+N(counter,1)=1;
+%N(1:counter,3)=n-1;
+
+
+
+
+for i=1:t    
+    s=num2str(i);
+    if length(s) > 3 %% 1:100
+        s=str2num(2:3)
+        if s<= 33  A=PA; else A=PB;end
+    else 
+        s2=str2num(2:3)
+    
+    
+    ind1=find(XI >= TH  & XI < 1);
+    %%% disconnect the edges
+    %%number of disconnected ndes 
+     %%T(i)=size(ind1,1);
+    
+        A(ind1,:)=0;
+        A(:,ind1)=0;
+   
+    
+    DXI=A*XI;
+    
+    DXR=zeros(size(XR));
+    for j=1:n
+        if FIR(j,1) == 1 
+            DXI(j,1)=0; 
+            
+            if FIR(j,2) ~= 1
+            
+            DXR(j,1)=(L(j,1)*XR(j,1));
+            
+            end
+            
+           
+        end    
+    end
+    
+    
+    
+    
+    
+    %
+    XI=XI+DXI;
+    XR=XR+DXR;
+    %XS=1-(XI+XR);
+    
+    X(:,i)=XI(5);
+    
+    
+    
+    
+    ind1=find(XI >= TH);   %%% bigger than threshold
+    FIR(ind1,1)=1;
+    
+    
+    %%%just for test
+    ind1=find(XR >= TH_recovered);   %%% bigger than threshold
+    FIR(ind1,2)=1;
+    
+    
+    
+    
+    
+    
+    ind1=find(FIR(:,1) == 1); %%% & FIR(:,2) == 0);  %%infected
+    ind2=find(FIR(:,2) == 1); %%recovered
+   % ind3=find(FIR(:,1) == 0); %% susceptible
+    
+    inf=size(ind1,1);
+    rec=size(ind2,1);
+    %sus=size(ind3,1);
+    
+    
+    
+    N(i,1)=inf;
+    N(i,2)=rec;
+    %N(i,3)=sus;
+    
+    
+
+
+    
+end
+%%N(:,1)=N(:,1)-N(:,2);
+
+% S=n-(N(:,1)+N(:,2)); %%Susceptible
+% 
+% figure(1)
+% plot(N(:,1),'g')
+% hold on
+% plot(N(:,2),'b')
+% hold on
+% plot(S,'r')
+
+%%%%% R0 calculation
+% % 
+% % Y=max(N(:,1));
+% % K=n-Y+1;    
+% % s=0;
+% % for i=K:n
+% %     s=s+1/i;
+% % end  
+% % 
+% % R0=n/(Y+1) * s;
+end
